@@ -1,85 +1,57 @@
 
-The Network Simulator, Version 3
-================================
+The Raft Implementation on NS-3
+===============================
 
 ## Table of Contents:
 
 1) [An overview](#an-open-source-project)
-2) [Building ns-3](#building-ns-3)
-3) [Running ns-3](#running-ns3)
-4) [Getting access to the ns-3 documentation](#getting-access-to-the-ns-3-documentation)
-5) [Working with the development version of ns-3](#working-with-the-development-version-of-ns-3)
+2) [Run Raft on NS-3](#running-raft-on-ns-3)
+3) [Getting access to the ns-3 documentation](#getting-access-to-the-ns-3-documentation)
+4) [Working with the development version of ns-3](#working-with-the-development-version-of-ns-3)
 
-Note:  Much more substantial information about ns-3 can be found at
-http://www.nsnam.org
 
 ## An Open Source project
 
+This project implements the Raft consensus algorithm on the ns-3 network simulator.
+It is based on the [Cornerstone](https://github.com/datatechnology/cornerstone) project, which
+serves as the core implementation of the Raft consensus algorithm. The original project
+builds on the real networks with multi-threads using a third-party library [Asio](https://github.com/chriskohlhoff/asio).
+In order to test and evaluate the algorithm with scalable number of cluster nodes, we modify the Raft kernel and build a ns-3 network topology
+to run Raft algorithm on the ns-3 environment.
+
+In our implementation, we still preserve the asio-related version and make it easy to change between
+real networks and ns-3 environment. To run the ns-3 version of Raft implementation, you don't need
+to install any third-party libs except for necessary system libs. All logics of Raft and ns-3 are
+written in C++ and you have access to all those codes in this repository.
+
+
 ns-3 is a free open source project aiming to build a discrete-event
-network simulator targeted for simulation research and education.   
-This is a collaborative project; we hope that
-the missing pieces of the models we have not yet implemented
-will be contributed by the community in an open collaboration
-process.
+network simulator targeted for simulation research and education. We use the CMake-supported
+version of ns-3 and our work lies in the examples directory named **raftcore**. To some extent, we consider the project
+an application of the ns-3 simulator.
 
-The process of contributing to the ns-3 project varies with
-the people involved, the amount of time they can invest
-and the type of model they want to work on, but the current
-process that the project tries to follow is described here:
-http://www.nsnam.org/developers/contributing-code/
+This project is part of the graduation design for bachelor's degree by Yuanjian Liu, Zhejiang University.
+We anticipate the project to be finished by the end of May, 2020. Currently, the project is under active development.
 
-This README excerpts some details from a more extensive
-tutorial that is maintained at:
-http://www.nsnam.org/documentation/latest/
 
-## Building ns-3
+## Running Raft on NS-3
 
-The code for the framework and the default models provided
-by ns-3 is built as a set of libraries. User simulations
-are expected to be written as simple programs that make
-use of these ns-3 libraries.
+The project is configured with CMakeLists.txt; We recommend you to open this folder with CLion, and
+you can directly view the codes and run any targets you want.
 
-To build the set of default libraries and the example
-programs included in this package, you need to use the
-tool 'waf'. Detailed information on how to use waf is
-included in the file doc/build.txt
+However, you can always use cmake to
+build it from the command line. The easiest way to do that is as follows
 
-However, the real quick and dirty way to get started is to
-type the command
-```shell
-./waf configure --enable-examples
+```sh
+$ git clone git@github.com:legendPerceptor/ns3-raft.git
+$ cmake -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - Unix Makefiles" $(pwd)
+$ make
 ```
 
-followed by
+The above commands will generate lots of cmake-related files that are not useful for us,
+so we recommend letting CLion do the intricate configuration of cmake.
 
-```shell
-./waf
-```
-
-in the directory which contains this README file. The files
-built will be copied in the build/ directory.
-
-The current codebase is expected to build and run on the
-set of platforms listed in the [release notes](RELEASE_NOTES)
-file.
-
-Other platforms may or may not work: we welcome patches to
-improve the portability of the code to these other platforms.
-
-## Running ns-3
-
-On recent Linux systems, once you have built ns-3 (with examples
-enabled), it should be easy to run the sample programs with the
-following command, such as:
-
-```shell
-./waf --run simple-global-routing
-```
-
-That program should generate a `simple-global-routing.tr` text
-trace file and a set of `simple-global-routing-xx-xx.pcap` binary
-pcap trace files, which can be read by `tcpdump -tt -r filename.pcap`
-The program source can be found in the examples/routing directory.
+Our codes locate in examples/raftcore.
 
 ## Getting access to the ns-3 documentation
 
