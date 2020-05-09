@@ -18,6 +18,22 @@ namespace cornerstone {
 
     NS_OBJECT_ENSURE_REGISTERED (RaftNode);
 
+
+    void ns3_event_listener::on_event(raft_event event) {
+        switch (event)
+        {
+            case raft_event::become_follower:
+                std::cout << Simulator::Now()<<"; " <<srv_id_ << " becomes a follower" << std::endl;
+                break;
+            case raft_event::become_leader:
+                std::cout << Simulator::Now()<<"; " << srv_id_ << " becomes a leader" << std::endl;
+                break;
+            case raft_event::logs_catch_up:
+                std::cout << Simulator::Now()<<"; " << srv_id_ << " catch up all logs" << std::endl;
+                break;
+        }
+    }
+
     class ns3_logger: public logger {
     public:
         ns3_logger() = default;
@@ -172,7 +188,7 @@ namespace cornerstone {
                 .with_prevote_enabled(false);
         ptr<state_machine> smachine(cs_new<echo_state_machine>());
         ptr<state_mgr> smgr(cs_new<simple_state_mgr>(GetNode()->GetId(),cluster_));
-        context* ctx(new context(smgr, smachine, listener, l, rpc_cli_factory, scheduler, cs_new<test_event_listener>(GetNode()->GetId()), params));
+        context* ctx(new context(smgr, smachine, listener, l, rpc_cli_factory, scheduler, cs_new<ns3_event_listener>(GetNode()->GetId()), params));
         ptr<raft_server> server(cs_new<raft_server>(ctx));
         listener->listen(server);
         this->server = server;

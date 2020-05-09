@@ -362,6 +362,14 @@ ptr<resp_msg> raft_server::handle_cli_req(req_msg& req) {
 
     ptr<resp_msg> resp (cs_new<resp_msg>(state_->get_term(), msg_type::append_entries_response, id_, leader_));
     if (!leader) {
+        l_->info(sstrfmt("server %d forward cli_request to leader %d").fmt(ctx_->state_mgr_->server_id(),leader_));
+        ptr<req_msg> req1 = cs_new<req_msg>(req.get_term(),req.get_type(),ctx_->state_mgr_->server_id(),leader_,req.get_last_log_term(),
+                                           req.get_last_log_idx(),req.get_commit_idx());
+        for(auto it = req.log_entries().begin();it!=req.log_entries().end();it++){
+            req1->log_entries().push_back(*it);
+        }
+        my_cli_reqs.push_back(req1);
+        send_msg_to_leader(req1);
         return resp;
     }
 
@@ -427,7 +435,7 @@ void raft_server::handle_election_timeout() {
             request_prevote();
         }
     } else {
-        l_->debug("Election timeout, change to Candidate");
+        l_->debug(sstrfmt("server %d Election timeout, change to Candidate").fmt(ctx_->state_mgr_->server_id()));
         become_candidate();
     }
     
@@ -1819,7 +1827,7 @@ ptr<async_result<bool>> raft_server::send_msg_to_leader(ptr<req_msg>& req) {
         else {
             rpc_success = resp && resp->get_accepted();
         }
-
+        //l_->info(sstrfmt("leader respond with resp accepted:%d").fmt(rpc_success?1:0));
         presult->set_result(rpc_success, perr);
     };
     rpc_cli->send(req, handler);

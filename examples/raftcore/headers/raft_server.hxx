@@ -142,6 +142,8 @@ namespace cornerstone {
         ptr<snapshot> last_snapshot_;
         std::unordered_set<int32> voted_servers_;
         uptr<prevote_state> prevote_state_;
+
+        std::vector<ptr<req_msg>> my_cli_reqs;
     };
 }
 #endif //_RAFT_SERVER_HXX_

@@ -32,12 +32,15 @@ namespace cornerstone::ns3impls {
 
         void stop();
 
+        virtual void cancel(ptr<delayed_task>& task) __override__;
+
     private:
         virtual void cancel_impl(ptr<delayed_task> & task)__override__;
 
     private:
         ns3::Ptr<ns3::Socket> socket_;
         std::map<ns3::Ipv4Address, ns3::Ptr<ns3::Socket>>* m_peersSockets;
+        std::map<ptr<cornerstone::delayed_task>, ns3::EventId> m_tasks;
     };
 
 }

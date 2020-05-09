@@ -265,10 +265,9 @@ namespace cornerstone {
         //问题主要是Leader可能会变，如何通知客户节点
         //现在的策略是在raft_server内核里转发消息给领导者节点
         //这样的问题是如果指定的这一个服务器宕机，那客户与集群的连接就丢失了
-        for(int j=0;j<3;j++)
-        for(int i=0;i<m_peersAddresses.size();i++){
+
             std::ostringstream os;
-            Ipv4Address ipv4 = Ipv4Address::ConvertFrom (m_peersAddresses[i]);
+            Ipv4Address ipv4 = Ipv4Address::ConvertFrom (m_peersAddresses[0]);
             os<<"tcp://"<<ipv4<<":"<<m_remoteServerPort;
             NS_LOG_DEBUG("TCP ADDR)"<<os.str());
             std::string tcp_addr = os.str();
@@ -276,11 +275,14 @@ namespace cornerstone {
             ptr<req_msg> msg = cs_new<req_msg>(0, msg_type::client_request, 0, 1, 0, 0, 0);
 
             std::ostringstream echo_mes;
-            echo_mes<<"the world is beautiful with j:"<<j<<", i:" <<i;
+            echo_mes<<"the world is beautiful with";
             std::string str = echo_mes.str();
             NS_LOG_DEBUG("THE Original BUF SIZE:"<<str.size());
-            bufptr buf = buffer::alloc(str.size()+1);
-            buf->put(str);
+            bufptr buf = buffer::alloc(str.size());
+            for(int i=0;i<str.size();i++){
+                buf->put((byte)str[i]);
+            }
+            //buf->put(str);
             buf->pos(0);
             msg->log_entries().push_back(cs_new<log_entry>(0, std::move(buf)));
 
@@ -303,7 +305,7 @@ namespace cornerstone {
 
             client->send(msg, handler);
 
-        }
+
 
     }
 

@@ -25,7 +25,7 @@ namespace cornerstone {
     public:
         virtual void schedule(ptr<delayed_task>& task, int32 milliseconds) = 0;
 
-        void cancel(ptr<delayed_task>& task) {
+        virtual void cancel(ptr<delayed_task>& task) {
             cancel_impl(task);
             task->cancel();
         }

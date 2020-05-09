@@ -12,10 +12,10 @@ int main(int argc, char**argv) {
     CommandLine cmd;
     cmd.Parse(argc, argv);
 
-    uint32_t nServer = 3;
+    uint32_t nServer = 7;
     uint32_t nClient = 1;
 
-    std::string dataRate= "5Mbps";
+    std::string dataRate= "100Mbps";
     std::string delay = "2ms";
 
     RaftTopologyHelper raftTopologyHelper(nServer, nClient, dataRate, delay);

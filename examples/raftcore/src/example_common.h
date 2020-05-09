@@ -164,6 +164,16 @@ namespace cornerstone {
         int srv_id_;
     };
 
+    class ns3_event_listener: public raft_event_listener {
+    public:
+        ns3_event_listener(int id) : raft_event_listener(), srv_id_(id){}
+
+        virtual void on_event(raft_event event) override;
+
+    private:
+        int srv_id_;
+    };
+
 }
 
 using namespace cornerstone;

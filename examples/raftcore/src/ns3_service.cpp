@@ -244,6 +244,7 @@ namespace cornerstone::ns3impls {
                         buf->put((byte)decoded[i]);
                     }
                     NS_LOG_DEBUG("bufsize:"<<buf->size());
+                    buf->pos(0);
                     //buf->put(decoded);
                     ptr<log_entry> entry(cs_new<log_entry>(term,std::move(buf),val_type));
                     req->log_entries().push_back(entry);
@@ -434,7 +435,7 @@ public:
             NS_LOG_ERROR("The socket is not initialized properly");
         }else {
             //多次调用send时有问题
-            NS_LOG_INFO("SEND update when_done m_bufsize");
+            NS_LOG_INFO("SEND update to "<<host_<<":"<<port_);
             handler = when_done;
 
             socket_->SetRecvCallback(MakeCallback(&ns3_rpc_client::HandleRead, this));
@@ -458,10 +459,11 @@ public:
                 log["term"].SetUint64((*it)->get_term());
                 log["val_type"].SetInt((*it)->get_val_type());
                 log["val_size"].SetInt((*it)->get_buf().size());
+                (*it)->get_buf().pos(0);
                 std::string encoded = base64_encode((*it)->get_buf().data(),(*it)->get_buf().size());
                 //NS_LOG_DEBUG("BEFORE BASE64:"<<(*it)->get_buf().data());
-                NS_LOG_DEBUG("BASE64 size:"<<(*it)->get_buf().size()<<", ENCODED:"<<encoded);
-                log["data"].SetString(encoded.c_str(),encoded.size());
+                NS_LOG_DEBUG("BASE64 size:"<<(*it)->get_buf().size()<<", ENCODED:"<<encoded.c_str());
+                log["data"].SetString(encoded.c_str(),encoded.size(),d.GetAllocator());
                 array.PushBack(log, allocator);
 
             }
@@ -524,7 +526,20 @@ private:
 
     void ns3_service::schedule(ptr<delayed_task> &task, int32 milliseconds) {
         task->reset();
-        Simulator::Schedule(ns3::MilliSeconds(milliseconds), &ExecuteTask, task);
+        EventId eventID = Simulator::Schedule(ns3::MilliSeconds(milliseconds), &ExecuteTask, task);
+        m_tasks.insert({task, eventID});
+    }
+
+    void ns3_service::cancel(ptr<delayed_task> &task) {
+        task->cancel();
+        if(m_tasks.find(task)==m_tasks.end()) {
+            NS_LOG_ERROR("the task to be canceled does not exist!");
+            return;
+        }
+        EventId id = m_tasks[task];
+        Simulator::Cancel(id);
+        m_tasks.erase(task);
+
     }
 
     ptr<rpc_client> ns3_service::create_client(const std::string& endpoint) {
