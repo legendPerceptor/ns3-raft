@@ -10,6 +10,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include "in_memory_log_store.h"
+#include "ns3/simulator.h"
 namespace cornerstone {
 
     class fs_logger : public logger {
@@ -53,12 +54,15 @@ namespace cornerstone {
     public:
         virtual void commit(const ulong, buffer &data, const uptr <log_entry_cookie> &) {
             auto_lock(lock_);
-            std::cout << "commit message:" << reinterpret_cast<const char *>(data.data()) << std::endl;
+            std::string tmp = reinterpret_cast<const char *>(data.data());
+            std::cout << ns3::Simulator::Now()<<" -data size:"<<data.size()<<", commit message:" << tmp.substr(0,data.size()) << std::endl;
         }
 
         virtual void pre_commit(const ulong, buffer &data, const uptr <log_entry_cookie> &) {
             auto_lock(lock_);
-            std::cout << "pre-commit: " << reinterpret_cast<const char *>(data.data()) << std::endl;
+            std::string tmp = reinterpret_cast<const char *>(data.data());
+            std::cout << ns3::Simulator::Now()<<" -data size:"<<data.size()<<", pre-commit message:" << tmp.substr(0,data.size()) << std::endl;
+
         }
 
         virtual void rollback(const ulong, buffer &data, const uptr <log_entry_cookie> &) {

@@ -171,8 +171,14 @@ namespace cornerstone {
         }
 //        m_caSocket = Socket::CreateSocket (GetNode (), TcpSocketFactory::GetTypeId ());
 //        m_caSocket->Connect (InetSocketAddress (m_caAddress, m_raftPort));
-
-
+        int lowBound, highBound;
+        if(GetNode()->GetId()<3){
+            lowBound=4;
+            highBound=8;
+        }else{
+            lowBound = 10;
+            highBound =20;
+        }
 
         ns3Service = cs_new<cornerstone::ns3impls::ns3_service>(m_socket, &m_peersSockets);
         ptr<logger> l(cs_new<ns3_logger>());
@@ -180,10 +186,10 @@ namespace cornerstone {
         ptr<delayed_task_scheduler> scheduler =ns3Service;
         ptr<rpc_client_factory> rpc_cli_factory = ns3Service;
         raft_params* params(new raft_params());
-        (*params).with_election_timeout_lower(200)
-                .with_election_timeout_upper(400)
+        (*params).with_election_timeout_lower(lowBound)
+                .with_election_timeout_upper(highBound)
                 .with_hb_interval(100)
-                .with_max_append_size(100)
+                .with_max_append_size(200)
                 .with_rpc_failure_backoff(50)
                 .with_prevote_enabled(false);
         ptr<state_machine> smachine(cs_new<echo_state_machine>());

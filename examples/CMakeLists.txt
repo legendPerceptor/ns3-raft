@@ -9,7 +9,7 @@ if (${NS3_EXAMPLES})
 #            realtime
 #            routing
             socket
-#            stats
+            stats
             tcp
 #            traffic-control
             tutorial

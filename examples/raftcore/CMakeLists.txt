@@ -1,6 +1,9 @@
 
-option(ASIO_RAFT "Build unit tests for raft core with ASIO" OFF)
-option(NS3_RAFT "Build unit tests for raft core with NS3" ON)
+#option(ASIO_RAFT "Build unit tests for raft core with ASIO" OFF)
+#option(NS3_RAFT "Build unit tests for raft core with NS3" ON)
+
+set(NS3_RAFT TRUE)
+set(ASIO_RAFT FALSE)
 
 set(SOURCE_FILES
         src/asio_service.cxx
@@ -91,7 +94,8 @@ set(NS3_SOURCEFILES
 set(NS3_TESTS
         tests/src/test_ns3_raft.cpp)
 
-
+include_directories(headers rapidjsonheaders)
+include_directories(asio/asio/include)
 
 message(STATUS "${NS3_HEADERS}")
 
@@ -105,14 +109,14 @@ if(ASIO_RAFT)
     add_library(cornerstone ${SOURCE_FILES} ${HEADER_FILES})
 endif()
 
-#if(NS3_RAFT)
+if(NS3_RAFT)
     add_library(cornerstone_ns3 ${NS3_ALL_SOURCEFILES} ${NS3_ALL_HEADERFILES})
 
-#endif()
+endif()
 
 #message(STATUS "CUR DIR:" ${cornerstone})
 
-include_directories(headers rapidjsonheaders)
+
 
 add_executable(test_base64 tests/src/test_base64.cpp headers/base64.h src/base64.cpp)
 
@@ -128,7 +132,7 @@ if(ASIO_RAFT)
 
     # ASIO requires threads
     find_package(Threads REQUIRED)
-    include_directories(asio/asio/include)
+
     set(NAME raftcore-test-asio)
     set(LIBS ${cornerstone})
     add_executable("${NAME}"
@@ -145,11 +149,12 @@ endif(ASIO_RAFT)
 
 
 
-#if (NS3_RAFT)
+if (NS3_RAFT)
+    add_definitions(-DNS3_ENV)
     set(NAME test_ns3_raft)
     set(LIBS cornerstone_ns3 ${libcore} ${libcsma} ${libpoint-to-point} ${libinternet} ${libapplications})
     build_example("${NAME}"  "${NS3_ALL_SOURCEFILES}" "${NS3_ALL_HEADERFILES}" "${LIBS}")
 #    add_executable(${NAME} ${NS3_TESTS} ${NS3_SOURCEFILES} ${SOURCE_FILES} ${NS3_HEADERS} ${HEADER_FILES})
 #add_test(NAME ${NAME} COMMAND ${NAME})
 #target_link_libraries(${NAME} ${LIBS})
-#endif (NS3_RAFT)
+endif (NS3_RAFT)

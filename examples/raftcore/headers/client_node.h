@@ -42,7 +42,7 @@ namespace cornerstone {
         void ConnectionSucceededCallback (Ptr<Socket> socket);
         void ConnectionFailedCallback(Ptr<Socket> socket);
         void ReceivedDataCallback(Ptr<Socket> socket);
-        void RequestMainObject();
+        void RequestMainObject(bool resend);
         void SwitchToState(State_t state);
         void HandleRead(Ptr<Socket> socket);
 

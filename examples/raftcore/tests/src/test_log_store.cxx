@@ -86,6 +86,7 @@ static bool entry_equals(log_entry& entry1, log_entry& entry2) {
             byte b1 = entry1.get_buf().data()[i];
             byte b2 = entry2.get_buf().data()[i];
             result = b1 == b2;
+            if(!result) return false;
         }
     }
 

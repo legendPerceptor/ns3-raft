@@ -21,23 +21,26 @@ namespace ns3 {
                                            std::string delay) {
 
         NS_LOG_INFO("Topology start");
-        m_nodes.Create(nServer + nClient + 1);
+        m_nodes.Create(nServer + nClient + 2);
         for(uint32_t i=0; i<nServer;i++) {
             m_servers.Add(m_nodes.Get(i));
         }
         for(uint32_t i=nServer; i<nServer+nClient;i++) {
             m_clients.Add(m_nodes.Get(i));
         }
-        m_ca.Add(m_nodes.Get(nServer+nClient));
+        m_ca.Add(m_nodes.Get(nServer+nClient+1));
+
+        //用于测试节点加入
+        //m_servers.Add(m_nodes.Get(nServer+nClient));
         CsmaHelper csma;
         csma.SetChannelAttribute("DataRate", StringValue(dataRate));
-        csma.SetChannelAttribute("Delay", StringValue(delay));
+        csma.SetChannelAttribute("Delay", TimeValue (MicroSeconds (200)));
         LogComponentEnableAll (LOG_PREFIX_FUNC);
         LogComponentEnableAll (LOG_PREFIX_TIME);
-        LogComponentEnable("RPC_SESSION",LogLevel(LOG_DEBUG|LOG_INFO));
-        LogComponentEnable("Raft_Server_Node",LogLevel(LOG_DEBUG|LOG_INFO));
-        LogComponentEnable("Raft_Client_Node",LogLevel(LOG_DEBUG|LOG_INFO|LOG_ERROR));
-        //LogComponentEnable("Raft_Network",LogLevel(LOG_DEBUG|LOG_INFO));
+//        LogComponentEnable("RPC_SESSION",LogLevel(LOG_DEBUG|LOG_INFO));
+        LogComponentEnable("Raft_Server_Node",LogLevel(LOG_INFO));
+//        LogComponentEnable("Raft_Client_Node",LogLevel(LOG_DEBUG|LOG_INFO));
+//        LogComponentEnable("Raft_Network",LogLevel(LOG_DEBUG|LOG_INFO));
         m_devices = csma.Install(m_nodes);
 
         InternetStackHelper stack;
@@ -59,10 +62,10 @@ namespace ns3 {
         client_apps = InstallClient(m_clients);
 
 //        ca_app = InstallCa(m_ca);
-        server_apps.Start (Seconds (0.5));
-        server_apps.Stop (Seconds (3.0));
-        client_apps.Start (Seconds (2.3));
-        client_apps.Stop (Seconds (2.8));
+        server_apps.Start (Seconds (1.0));
+        server_apps.Stop (Seconds (50.0));
+        client_apps.Start (Seconds (5.0));
+        client_apps.Stop (Seconds (49.0));
 //        ca_app.Start (Seconds (1.0));
 //        ca_app.Stop (Seconds (30.0));
         NS_LOG_INFO("Topology End.");

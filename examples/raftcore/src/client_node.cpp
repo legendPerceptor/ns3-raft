@@ -203,7 +203,7 @@ namespace cornerstone {
                                                    this));
             //NS_ASSERT (m_embeddedObjectsToBeRequested == 0);
             m_eventRequestMainObject = Simulator::ScheduleNow (
-                    &ClientNode::RequestMainObject, this);
+                    &ClientNode::RequestMainObject, this, false);
         }
         else
         {
@@ -244,6 +244,14 @@ namespace cornerstone {
 
                     rapidjson::Document d;
                     d.Parse(parsedPacket.c_str());
+                    int32 dst = d["dst"].GetInt();
+                    if(dst==-1){
+                        NS_LOG_INFO("ReSchedule the RequestMainObject");
+                        Simulator::ScheduleNow(&ClientNode::RequestMainObject, this,true);
+                    }else{
+                        NS_LOG_INFO("Schedule a new RequestMainObject");
+                        Simulator::ScheduleNow(&ClientNode::RequestMainObject, this,false);
+                    }
 
                     if(!d.IsObject()){
                         NS_LOG_WARN("The parsed packet is corrupted");
@@ -261,50 +269,54 @@ namespace cornerstone {
     }
 
 
-    void ClientNode::RequestMainObject() {
+    void ClientNode::RequestMainObject(bool resend) {
         //问题主要是Leader可能会变，如何通知客户节点
         //现在的策略是在raft_server内核里转发消息给领导者节点
         //这样的问题是如果指定的这一个服务器宕机，那客户与集群的连接就丢失了
+        static int i = 0;
+        if(i+1>1000){return;}
+        else if(!resend){i=i+1;}
+        std::ostringstream os;
+        Ipv4Address ipv4 = Ipv4Address::ConvertFrom(m_peersAddresses[0]);
+        os << "tcp://" << ipv4 << ":" << m_remoteServerPort;
+        NS_LOG_DEBUG("TCP ADDR)" << os.str());
+        std::string tcp_addr = os.str();
+        ptr<rpc_client> client = ns3Service->create_client(os.str());
+        Ptr<Socket> t=m_peersSockets[ipv4];
+        t->SetRecvCallback(MakeCallback (&ClientNode::ReceivedDataCallback,
+                                         this));
+        ptr<req_msg> msg = cs_new<req_msg>(0, msg_type::client_request, 0, 1, 0, 0, 0);
 
-            std::ostringstream os;
-            Ipv4Address ipv4 = Ipv4Address::ConvertFrom (m_peersAddresses[0]);
-            os<<"tcp://"<<ipv4<<":"<<m_remoteServerPort;
-            NS_LOG_DEBUG("TCP ADDR)"<<os.str());
-            std::string tcp_addr = os.str();
-            ptr<rpc_client> client= ns3Service->create_client(os.str());
-            ptr<req_msg> msg = cs_new<req_msg>(0, msg_type::client_request, 0, 1, 0, 0, 0);
+        std::ostringstream echo_mes;
+        echo_mes << "We made a consensus on " << i;
+        std::string str = echo_mes.str();
+        NS_LOG_DEBUG("THE Original BUF SIZE:" << str.size());
+        bufptr buf = buffer::alloc(str.size());
+        for (int i = 0; i < str.size(); i++) {
+            buf->put((byte) str[i]);
+        }
+        //buf->put(str);
+        buf->pos(0);
+        msg->log_entries().push_back(cs_new<log_entry>(0, std::move(buf)));
 
-            std::ostringstream echo_mes;
-            echo_mes<<"the world is beautiful with";
-            std::string str = echo_mes.str();
-            NS_LOG_DEBUG("THE Original BUF SIZE:"<<str.size());
-            bufptr buf = buffer::alloc(str.size());
-            for(int i=0;i<str.size();i++){
-                buf->put((byte)str[i]);
-            }
-            //buf->put(str);
-            buf->pos(0);
-            msg->log_entries().push_back(cs_new<log_entry>(0, std::move(buf)));
+        // The handler will not be called
+        // auto self = this->shared_from_this();
+//        rpc_handler handler = (rpc_handler) ([&client](ptr<resp_msg> &rsp,
+//                                                       const ptr<rpc_exception> &err) -> void {
+//            NS_LOG_DEBUG("The client handler was called");
+//            if (!rsp->get_accepted()) {
+//
+//                NS_LOG_ERROR("The client's request was not accepted by the server");
+//
+//            } else {
+//                NS_LOG_INFO("The client's request has been handled successfully");
+//            }
+//
+//        });
+//
+//        clients_rpc_.insert({client, handler});
 
-            // The handler will not be called
-            //auto self = this->shared_from_this();
-            rpc_handler handler = (rpc_handler)([&client](ptr<resp_msg>& rsp, const ptr<rpc_exception>& err) -> void {
-                NS_LOG_DEBUG("The client handler was called");
-                if(!rsp->get_accepted()){
-
-                    NS_LOG_ERROR("The client's request was not accepted by the server");
-
-                }else{
-
-                    NS_LOG_INFO("The client's request has been handled successfully");
-
-                }
-            });
-
-            clients_rpc_.insert({client,handler});
-
-            client->send(msg, handler);
-
+        client->send(msg, nullptr);
 
 
     }

@@ -16,6 +16,7 @@
 */
 
 #include "cornerstone.hxx"
+#include <iostream>
 #include "ns3env.h"
 
 #ifdef NS3_ENV
@@ -99,7 +100,8 @@ raft_server::raft_server(context* ctx)
     std::default_random_engine engine(rd());
     std::uniform_int_distribution<int32> distribution(ctx->params_->election_timeout_lower_bound_, ctx->params_->election_timeout_upper_bound_);
     rand_timeout_ = [distribution, engine]() mutable -> int32_t {
-        return distribution(engine);
+        return distribution(engine)  * 50;
+
     };
 
     if (!state_) {
@@ -357,6 +359,10 @@ ptr<resp_msg> raft_server::handle_cli_req(req_msg& req) {
     // there could be a case that the leader just elected, in that case, client can 
     // just simply retry, no safety issue here.
     if (role_ == srv_role::leader && !leader) {
+        return cs_new<resp_msg>(state_->get_term(), msg_type::append_entries_response, id_, -1);
+    }
+
+    if(!leader && ctx_->state_mgr_->server_id()== leader_ ) {
         return cs_new<resp_msg>(state_->get_term(), msg_type::append_entries_response, id_, -1);
     }
 

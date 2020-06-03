@@ -437,8 +437,9 @@ public:
             //多次调用send时有问题
             NS_LOG_INFO("SEND update to "<<host_<<":"<<port_);
             handler = when_done;
-
-            socket_->SetRecvCallback(MakeCallback(&ns3_rpc_client::HandleRead, this));
+            if(when_done) {
+                socket_->SetRecvCallback(MakeCallback(&ns3_rpc_client::HandleRead, this));
+            }
             rapidjson::Value array(rapidjson::kArrayType);
 
             rapidjson::Document d;
@@ -553,7 +554,7 @@ private:
         std::string port = mresults[4].str();
         Ipv4Address ipv4Address = Ipv4Address(hostname.c_str());
         //NS_LOG_DEBUG("hostname:"<<hostname);
-        NS_LOG_DEBUG("create_clien IP_addr:"<<ipv4Address);
+        NS_LOG_DEBUG("create_client IP_addr:"<<ipv4Address);
         if(m_peersSockets->find(ipv4Address)==m_peersSockets->end()){
             std::cerr<<"Cannot find the related socket to send messages!"<<std::endl;
             return ptr<rpc_client>();

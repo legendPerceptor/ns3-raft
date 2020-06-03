@@ -302,7 +302,7 @@ public:
 
     __nocopy__(test_rpc_client)
 
-    virtual void send(ptr<req_msg>& req, rpc_handler& when_done) __override__ {
+    virtual void send(ptr<req_msg>& req, rpc_handler when_done) __override__ {
         ptr<async_result<ptr<resp_msg>>> result(cs_new<async_result<ptr<resp_msg>>>());
         result->when_ready([req, when_done](ptr<resp_msg>& resp, const ptr<std::exception>& err) -> void {
             if (err != nilptr) {

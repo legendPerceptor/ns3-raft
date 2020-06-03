@@ -16,11 +16,11 @@ int main(int argc, char**argv) {
     uint32_t nClient = 1;
 
     std::string dataRate= "100Mbps";
-    std::string delay = "2ms";
+    std::string delay = "0.2ms";
 
     RaftTopologyHelper raftTopologyHelper(nServer, nClient, dataRate, delay);
 
-    Simulator::Stop(Seconds(3));
+    Simulator::Stop(Seconds(100));
     Simulator::Run();
     Simulator::Destroy();
 
